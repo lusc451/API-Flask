@@ -1,16 +1,41 @@
-from flask import Flask, request, Response
+from flask import Flask, request, Response, g
+import sqlite3
 
 app = Flask(__name__)
 
-empregados = [
-                {'nome': 'Valentina', 'cargo': 'Analista', 'salario':5000},
-                {'nome': 'Lucas', 'cargo': 'Desenvolvedor', 'salario':6000},
-                {'nome': 'Enzo', 'cargo': 'Analista', 'salario':4000},
-             ]
+DB_URL = 'enterprise.db'
+
+# empregados = [
+#                 {'nome': 'Valentina', 'cargo': 'Analista', 'salario':5000},
+#                 {'nome': 'Lucas', 'cargo': 'Desenvolvedor', 'salario':6000},
+#                 {'nome': 'Enzo', 'cargo': 'Analista', 'salario':4000},
+#              ]
 
 users = [
             {'username': 'Carlos', 'secret': '@dmin456'}
         ]
+
+@app.before_request
+def before_request():
+    print("Conectando ao banco")
+    conn = sqlite3.connect(DB_URL)
+    g.conn = conn
+    
+@app.teardown_request
+def after_request(exception):
+    if g.conn is not None:
+        g.conn.close()
+        print("Desconectando do banco")
+        
+def query_employers_to_dict(conn, query):
+    cursor = conn.cursor()
+    
+    cursor.execute(query)
+    
+    employers_dict =[{'nome':row[0], 'cargo':row[1], 'salario':row[2]}
+                    for row in cursor.fetchall()]
+    
+    return employers_dict
 
 def check_user(username, secret):
     for user in users:
@@ -24,35 +49,43 @@ def home():
 
 @app.route("/empregados")
 def get_empregados():
-    return {'empregados': empregados}
+    
+    query = """
+        SELECT nome, cargo, salario
+        FROM empregados;
+    """
+    employers_dict = query_employers_to_dict(g.conn, query)
+    
+    return {'empregados': employers_dict}
 
 @app.route("/empregados/<cargo>")
 def get_empregados_cargo(cargo):
     
-    out_empregados = []
-    for empregado in empregados:
-        if cargo == empregado['cargo'].lower():
-            out_empregados.append(empregado)
+    query = """
+        SELECT nome, cargo, salario
+        FROM empregados
+        WHERE "cargo" LIKE "{}";
+    """.format(cargo)
     
-    return {'empregados': out_empregados}
+    employers_dict = query_employers_to_dict(g.conn, query)
+    
+    return {'empregados': employers_dict}
 
 @app.route("/empregados/<info>/<value>")
 def get_empregados_info(info, value):
     
-    out_empregados = []
-    for empregado in empregados:
-        if info in empregado.keys():
-            value_empregado = empregado[info]
-            
-            if type(value_empregado) == str:
-                if value == value_empregado.lower():
-                    out_empregados.append(empregado)
-            
-            if type(value_empregado) == int:
-                if int(value) == value_empregado:
-                    out_empregados.append(empregado)
+    if value.isnumeric():
+        value = float(value)
     
-    return {'empregados': out_empregados}
+    query = """
+        SELECT nome, cargo, salario
+        FROM empregados
+        WHERE "{}" LIKE "{}";
+    """.format(info, value)
+    
+    employers_dict = query_employers_to_dict(g.conn, query)
+    
+    return {'empregados': employers_dict}
     
 @app.route("/informations", methods=['POST'])
 def get_empregados_post():
@@ -67,20 +100,18 @@ def get_empregados_post():
     info = request.form['info']
     value = request.form['value']
     
-    out_empregados = []
-    for empregado in empregados:
-        if info in empregado.keys():
-            value_empregado = empregado[info]
-            
-            if type(value_empregado) == str:
-                if value == value_empregado.lower():
-                    out_empregados.append(empregado)
-            
-            if type(value_empregado) == int:
-                if int(value) == value_empregado:
-                    out_empregados.append(empregado)
+    if value.isnumeric():
+        value = float(value)
     
-    return {'empregados': out_empregados}
+    query = """
+        SELECT nome, cargo, salario
+        FROM empregados
+        WHERE "{}" LIKE "{}";
+    """.format(info, value)
+    
+    employers_dict = query_employers_to_dict(g.conn, query)
+    
+    return {'empregados': employers_dict}
 
 if __name__ == "__main__":
     app.run(debug=True)
