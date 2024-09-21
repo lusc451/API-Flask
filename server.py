@@ -24,7 +24,7 @@ def get_empregados_cargo(cargo):
         if cargo == empregado['cargo'].lower():
             out_empregados.append(empregado)
     
-    return out_empregados
+    return {'empregados': out_empregados}
 
 @app.route("/empregados/<info>/<value>")
 def get_empregados_info(info, value):
@@ -42,7 +42,7 @@ def get_empregados_info(info, value):
                 if int(value) == value_empregado:
                     out_empregados.append(empregado)
     
-    return out_empregados
+    return {'empregados': out_empregados}
     
     
 
