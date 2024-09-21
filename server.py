@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 
 app = Flask(__name__)
 
@@ -44,7 +44,26 @@ def get_empregados_info(info, value):
     
     return {'empregados': out_empregados}
     
+@app.route("/informations", methods=['POST'])
+def get_empregados_post():
     
+    info = request.form['info']
+    value = request.form['value']
+    
+    out_empregados = []
+    for empregado in empregados:
+        if info in empregado.keys():
+            value_empregado = empregado[info]
+            
+            if type(value_empregado) == str:
+                if value == value_empregado.lower():
+                    out_empregados.append(empregado)
+            
+            if type(value_empregado) == int:
+                if int(value) == value_empregado:
+                    out_empregados.append(empregado)
+    
+    return {'empregados': out_empregados}
 
 if __name__ == "__main__":
     app.run(debug=True)
