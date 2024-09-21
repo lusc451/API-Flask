@@ -1,6 +1,6 @@
 import requests
 
-data = {"info":"salario", "value":5000}
+data = {"username": "Carlos", "secret": "@dmin456", "info":"cargo", "value":"desenvolvedor"}
 
 response = requests.post("http://127.0.0.1:5000/informations", data=data)
 

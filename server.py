@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, Response
 
 app = Flask(__name__)
 
@@ -7,6 +7,16 @@ empregados = [
                 {'nome': 'Lucas', 'cargo': 'Desenvolvedor', 'salario':6000},
                 {'nome': 'Enzo', 'cargo': 'Analista', 'salario':4000},
              ]
+
+users = [
+            {'username': 'Carlos', 'secret': '@dmin456'}
+        ]
+
+def check_user(username, secret):
+    for user in users:
+        if (user['username'] == username) and (user['secret'] == secret):
+            return True
+    return False
 
 @app.route("/")
 def home():
@@ -46,6 +56,13 @@ def get_empregados_info(info, value):
     
 @app.route("/informations", methods=['POST'])
 def get_empregados_post():
+    
+    username = request.form['username']
+    secret = request.form['secret']
+    
+    if not check_user(username, secret):
+        # 401 HTTP Unauthorized
+        return Response("Unauthorized", status=401)
     
     info = request.form['info']
     value = request.form['value']
