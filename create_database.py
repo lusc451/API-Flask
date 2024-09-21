@@ -12,3 +12,8 @@ cursor.execute("""
                    salario REAL
                );
 """)
+
+print("Banco criado com sucesso!")
+
+# Encerrando a conexão com o banco de dados
+conn.close()
